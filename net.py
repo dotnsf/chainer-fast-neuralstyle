@@ -17,8 +17,8 @@ class ResidualBlock(chainer.Chain):
         )
 
     def __call__(self, x, test):
-        h = F.relu(self.b1(self.c1(x), test=test))
-        h = self.b2(self.c2(h), test=test)
+        h = F.relu(self.b1(self.c1(x)))
+        h = self.b2(self.c2(h))
         if x.data.shape != h.data.shape:
             xp = chainer.cuda.get_array_module(x.data)
             n, c, hh, ww = x.data.shape
@@ -52,16 +52,16 @@ class FastStyleNet(chainer.Chain):
         )
 
     def __call__(self, x, test=False):
-        h = self.b1(F.elu(self.c1(x)), test=test)
-        h = self.b2(F.elu(self.c2(h)), test=test)
-        h = self.b3(F.elu(self.c3(h)), test=test)
+        h = self.b1(F.elu(self.c1(x)))
+        h = self.b2(F.elu(self.c2(h)))
+        h = self.b3(F.elu(self.c3(h)))
         h = self.r1(h, test=test)
         h = self.r2(h, test=test)
         h = self.r3(h, test=test)
         h = self.r4(h, test=test)
         h = self.r5(h, test=test)
-        h = self.b4(F.elu(self.d1(h)), test=test)
-        h = self.b5(F.elu(self.d2(h)), test=test)
+        h = self.b4(F.elu(self.d1(h)))
+        h = self.b5(F.elu(self.d2(h)))
         y = self.d3(h)
         return (F.tanh(y)+1)*127.5
 
