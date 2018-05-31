@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3c.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<title>{{ title }}</title>
+<script src="//code.jquery.com/jquery-2.0.3.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-minicolors/2.2.6/jquery.minicolors.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-minicolors/2.2.6/jquery.minicolors.css"/>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css"/>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+
+<style type="text/css">
+*{
+ margin: 0;
+ padding: 0;
+}
+
+.navbar-fixed-top{
+ position: fixed;
+ top: 0;
+ right: 0;
+ left: 0;
+ z-index: 1030;
+ margin-bottom: 0;
+ background-color: #428BCA;
+ foreground-color: #ffffff;
+}
+
+html, body{
+  text-align: center;
+  background-color: #fafafa;
+  font-size: 12px;
+  color: #333;
+}
+select{
+  font-size: 10pt;
+}
+#mycanvas{
+  border: 1px solid #333;
+}
+
+.nav > li > a{
+  padding: 5px 5px;
+}
+.scr{
+  overflow: scroll;
+}
+.panel-body{
+  text-align: left;
+}
+</style>
+<script type="text/javascript" src="./cvi_busy_lib.js"></script>
+</head>
+<body>
+
+<nav class="navbar navbar-default">
+  <div class="navbar-header">
+    <a href="#" class="navbar-brand">{{ title }}</a>
+    <button class="navbar-toggle" data-toggle="collapse" data-target=".target">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+  </div>
+  <div class="collapse navbar-collapse target">
+  </div>
+</nav>
+
+<script type="text/javascript">
+$(function(){
+  var canvas = document.getElementById( 'mycanvas' );
+  if( !canvas || !canvas.getContext ){
+    return false;
+  }
+  var ctx = canvas.getContext( '2d' );
+
+  //. ファイル選択時
+  var selfInput = $(this).find( 'input[type=file]' );
+  selfInput.change( function(){
+    var file = $(this).prop('files')[0];
+    if( !file.type.match( /image\/\w+/ ) ){
+      //. 画像以外
+      alert( '画像ファイルを指定してください' );
+      resetCanvas();
+      return;
+    }
+
+    var reader = new FileReader();
+    if( this.files.length ){
+      if( file.type.match( 'image.*' ) ){
+        reader.onload = function(){
+          var img = new Image();
+          img.src = reader.result;
+          img.addEventListener( 'load', function(){
+            var w = img.width;
+            var h = img.height;
+
+            //. 幅と高さの大きい方を 300 に揃える
+            var dx = 0;
+            var dy = 0;
+            if( w > h ){
+              h = Math.round( 300 * h / w );
+              w = 300;
+              //dy = ( 300 - h ) / 2;
+            }else{
+              w = Math.round( 300 * w / h );
+              h = 300;
+              //dx = ( 300 - w ) / 2;
+            }
+
+            $('#mycanvas').attr( 'width', w );
+            $('#mycanvas').attr( 'height', h );
+            ctx.drawImage( img, dx, dy, w, h );
+
+            post();
+          }, false );
+        };
+        reader.onerror = function( e ){
+          console.log( 'error: ' + e );
+        };
+        reader.readAsDataURL( file );
+      }else{
+        if( 0 < selfImg.size() ){
+          return;
+        }
+      }
+    }
+  });
+
+  resetCanvas();
+
+  if( location.search ){
+    location.search = '';
+  }
+});
+
+function resetCanvas(){
+  var canvas = document.getElementById( 'mycanvas' );
+  if( !canvas || !canvas.getContext ){
+    return false;
+  }
+  var ctx = canvas.getContext( '2d' );
+
+  //. 全体を白でベタ塗り
+  ctx.beginPath();
+  ctx.fillStyle = "rgb( 255, 255, 255 )";
+  ctx.fillRect( 0, 0, 300, 300 );
+  ctx.stroke();
+}
+
+function post(){
+  var formdata = new FormData();
+  formdata.append( 'status', $('#status').val() );
+
+  var canvas = document.getElementById( 'mycanvas' );
+  var ctx = canvas.getContext( '2d' );
+
+  //. 画像データ取得
+  var png = canvas.toDataURL( 'image/png' );
+  png = png.replace( /^.*,/, '' );
+
+  //. バイナリ変換
+  var bin = atob( png );
+  var buffer = new Uint8Array( bin.length );
+  for( var i = 0; i < bin.length; i ++ ){
+    buffer[i] = bin.charCodeAt( i );
+  }
+  var blob = new Blob( [buffer.buffer], {
+    type: 'image/png'
+  });
+
+  formdata.append( 'image', blob );
+
+  //var obj = getBusyOverlay( 'viewport', { color:'black', opacity:0.5, text:'loading', style:'text-decoration:blink;font-weight:bold;font-size:12px;color:white' } );
+
+  $.ajax({
+    type: "POST",
+    url: "./post",
+    data: formdata,
+    contentType: false,
+    processData: false,
+    success: function( uid, dataType ){
+      //obj.remove();
+      console.log( uid );
+
+      $('#result_div').html( '<img src="./' + uid + '.jpg"/>' );
+    },
+    error: function( jqXHR, textStatus, errorThrown ){
+      //obj.remove();
+      console.log( textStatus + ": " + errorThrown );
+    }
+  });
+}
+
+function replaceAll( text, src, dst ){
+  return text.split( src ).join( dst );
+}
+
+function sanitize( text ){
+  text = replaceAll( text, "&", "&amp;" );
+  text = replaceAll( text, "<", "&lt;" );
+  text = replaceAll( text, ">", "&gt;" );
+  text = replaceAll( text, '"', "&quot;" );
+
+  return text;
+}
+</script>
+
+
+<div class="container" style="padding:0 0">
+  <label>
+    <span class="btn btn-primary">Image File<input type="file" style="display:none"/></span>
+  </label>
+
+  <div id="canvas_div">
+   <canvas width="300" height="300" id="mycanvas">
+   </canvas>
+<!--
+   <br/>
+   <input type="button" class="btn btn-default" value="reset" onClick="resetCanvas();"/>
+ -->
+  </div>
+  <div id="result_div">
+  </div>
+</div>
+
+<!--
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-98877157-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+-->
+
+</body>
+</html>
