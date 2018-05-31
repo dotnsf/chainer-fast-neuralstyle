@@ -58,12 +58,16 @@ def post():
   filebuf = request.files.get( 'image' )
   stream = filebuf.stream
 
+  stylemodel = 'models/seurat.model'
+  if request.form['stylemodel'] :
+    stylemodel = 'models/%s.model' % request.form['stylemodel']
+
   f = open( INPUTFILE, 'wb' )
   f.write( stream.read() )
 
   # chainer
   model = FastStyleNet()
-  serializers.load_npz('models/seurat.model', model)
+  serializers.load_npz(stylemodel, model)
   xp = np
 
   original = Image.open( INPUTFILE ).convert( 'RGB' )

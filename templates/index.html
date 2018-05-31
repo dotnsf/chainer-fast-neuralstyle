@@ -154,7 +154,7 @@ function resetCanvas(){
 
 function post(){
   var formdata = new FormData();
-  formdata.append( 'status', $('#status').val() );
+  formdata.append( 'stylemodel', $('#stylemodel').val() );
 
   var canvas = document.getElementById( 'mycanvas' );
   var ctx = canvas.getContext( '2d' );
@@ -215,6 +215,10 @@ function sanitize( text ){
   <label>
     <span class="btn btn-primary">Image File<input type="file" style="display:none"/></span>
   </label>
+  <select id="stylemodel" name="stylemodel">
+    <option value="composition" selected="selected">Composition</option>
+    <option value="seurat">Seurat</option>
+  </select>
 
   <div id="canvas_div">
    <canvas width="300" height="300" id="mycanvas">
