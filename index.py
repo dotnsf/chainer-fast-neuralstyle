@@ -34,11 +34,10 @@ def index():
   name = "TEST"
   return render_template('index.html', title='chainer-gogh test', name=name)
 
-@app.route('/result.jpg')
-def result():
-  f = open( 'tmp/result.jpg', 'rb' )
-  image = f.read()
-  return Response( response=image, content_type='image/jpeg' )
+@app.route('/models')
+def models():
+  files = os.listdir( 'models' );
+  return Response( response=files, content_type='application/json' )
 
 @app.route('/<regex("[0-9]*"):uid>.jpg')
 def image(uid):
