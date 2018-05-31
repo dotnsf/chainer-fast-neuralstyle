@@ -10,6 +10,7 @@ from net import *
 
 import sys
 import os
+import json
 from flask import Flask, request, render_template, Response
 from werkzeug.routing import BaseConverter
 app = Flask(__name__)
@@ -37,7 +38,13 @@ def index():
 @app.route('/models')
 def models():
   files = os.listdir( 'models' );
-  return Response( response=files, content_type='application/json' )
+  list = []
+  for file in files:
+    if file.endswith( '.model' ):
+      list.append( file )
+  arr = json.dumps( list )
+
+  return Response( response=arr, content_type='application/json' )
 
 @app.route('/<regex("[0-9]*"):uid>.jpg')
 def image(uid):

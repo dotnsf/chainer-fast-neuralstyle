@@ -136,7 +136,30 @@ $(function(){
   if( location.search ){
     location.search = '';
   }
+
+  loadModels();
 });
+
+function loadModels(){
+  $.ajax({
+    type: "GET",
+    url: "./models",
+    success: function( result ){
+      //console.log( result );
+      result.forEach( function( model ){
+        var n = model.lastIndexOf( '.model' );
+        if( n > -1 ){
+          var modelname = model.substring( 0, n );
+          var option = '<option value="' + modelname + '">' + modelname + '</option>';
+          $('#stylemodel').append( option );
+        }
+      });
+    },
+    error: function( jqXHR, textStatus, errorThrown ){
+      console.log( textStatus + ": " + errorThrown );
+    }
+  });
+}
 
 function resetCanvas(){
   var canvas = document.getElementById( 'mycanvas' );
@@ -216,8 +239,10 @@ function sanitize( text ){
     <span class="btn btn-primary">Image File<input type="file" style="display:none"/></span>
   </label>
   <select id="stylemodel" name="stylemodel">
+    <!--
     <option value="composition" selected="selected">Composition</option>
     <option value="seurat">Seurat</option>
+  -->
   </select>
 
   <div id="canvas_div">
